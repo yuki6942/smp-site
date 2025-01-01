@@ -74,7 +74,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ index })
             });
-            displayEntries();
+            await displayEntries();
         }
 
         function copyToClipboard(text) {
@@ -90,7 +90,7 @@
             const coordinates = document.getElementById("coordinates").value;
             if (name && coordinates) {
                 await addEntry(name, coordinates);
-                displayEntries();
+                await displayEntries();
                 document.getElementById("name").value = "";
                 document.getElementById("coordinates").value = "";
             } else {
