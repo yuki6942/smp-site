@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMP Einträge</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+    <h1>SMP Einträge</h1>
+    <div>
+        <label for="name">Name:</label>
+        <input type="text" id="name" placeholder="Name eingeben">
+    </div>
+    <div>
+        <label for="coordinates">Koordinaten:</label>
+        <input type="text" id="coordinates" placeholder="Koordinaten eingeben">
+    </div>
+    <button class="button" id="addEntryBtn" title="Hinzufügen">Eintrag Hinzufügen</button>
+
+    <h2>Einträge</h2>
+    <ul id="entriesList"></ul>
+
+    <script>
+        async function loadEntries() {
+            const res = await fetch('/entries');
+            return res.json();
+        }
+
+        async function displayEntries() {
+            const entries = await loadEntries();
+            const entriesList = document.getElementById("entriesList");
+            entriesList.innerHTML = "";
+            entries.forEach((entry, index) => {
+                const li = document.createElement("li");
+                li.classList.add("entry");
+
+                const entryText = document.createElement("span");
+                entryText.textContent = `${entry.name} ● ${entry.coordinates}`;
+
+                const copyBtn = document.createElement("button");
+                copyBtn.classList.add("copy-btn");
+                copyBtn.innerHTML = "&#128203;";
+                copyBtn.title = "Kopieren";
+                copyBtn.onclick = () => copyToClipboard(entry.coordinates);
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.classList.add("remove-btn");
+                deleteBtn.textContent = "Entfernen";
+                deleteBtn.title = "Löschen"
+                deleteBtn.onclick = () => removeEntry(index);
+
+                li.appendChild(entryText);
+                li.appendChild(copyBtn);
+                li.appendChild(deleteBtn);
+
+                entriesList.appendChild(li);
+            });
+        }
+
+        async function addEntry(name, coordinates) {
+            await fetch('/entries', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, coordinates })
+            });
+        }
+
+        async function removeEntry(index) {
+            await fetch('/entries', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ index })
+            });
+            displayEntries();
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("In die Zwischenablage kopiert: " + text);
+            }).catch(err => {
+                console.error("Kopieren fehlgeschlagen", err);
+            });
+        }
+
+        document.getElementById("addEntryBtn").addEventListener("click", async function () {
+            const name = document.getElementById("name").value;
+            const coordinates = document.getElementById("coordinates").value;
+            if (name && coordinates) {
+                await addEntry(name, coordinates);
+                displayEntries();
+                document.getElementById("name").value = "";
+                document.getElementById("coordinates").value = "";
+            } else {
+                alert("Bitte Name und Koordinaten eingeben.");
+            }
+        });
+
+        displayEntries();
+    </script>
+</body>
+
+</html>
